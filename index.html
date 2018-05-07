@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,77 +9,128 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
     <style>
         .box {
-            stroke:black;
-            fill:white;
+            stroke: black;
+            fill: white;
         }
-
+        
         .nuke {
-            fill:red;
+            fill: red;
         }
-
+        
         svg {
             display: block;
             margin: auto;
         }
+        
         #title {
-            text-align:center;
-            width:600px;
-            margin:0 auto;
+            text-align: center;
+            width: 600px;
+            margin: 0 auto;
+        }
+        
+        .group {
+            stroke: black;
+            fill: none;
         }
     </style>
 
 </head>
+
 <body>
-<svg width="600" height="600"></svg>
-<div id='title'>
-<h4>Fig.1.1 Nuclear firepower</h4>
-<p>The dot in the centre represents all the firepower of World War II. The other dots <br>
-represent the firepower of existing nuclear weapons.</p>
-<p><i>Source: Toronto Star,</i> 24 January 1982</p>
-</div>
-<script>
-    var data = [];
-    for (var i=0; i<11;i++) {
-        for (var j=0;j<11;j++) {
-            data.push({x:i,y:j});
+    <div class="diagram"></div>
+    <div id='title'>
+        <h4>Fig.1.1 Nuclear firepower</h4>
+        <p>The dot in the centre represents all the firepower of World War II. The other dots <br> represent the firepower of existing nuclear weapons.</p>
+        <p><i>Source: Toronto Star,</i> 24 January 1982</p>
+    </div>
+    <script>
+        let data = [];
+        const width = 600;
+        for (let i = 0; i < 11; i++) {
+            for (let j = 0; j < 11; j++) {
+                data.push({
+                    x: i,
+                    y: j
+                });
+            }
         }
-    }
-    var svg = d3.select('svg');
 
-    svg.selectAll('.box')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x',function(d) {return d.x * (600/11);})
-        .attr('y',function(d) {return d.y * (600/11);})
-        .attr('height',(600/11))
-        .attr('width',(600/11))
-        .attr('class','box');
-        
-    var pointData = [];
-    var limitData = data;
-        limitData.splice(60,1);
-    for (var i=0; i<50; i++) {
-        pointData = pointData.concat(limitData);
-    }
-    pointData = pointData.concat([{x:5,y:5}]);
+        function innerGrid(x, y) {
+            let grid = [];
+            let rowsCols = (boxSize / 7);
 
-    svg.selectAll('.nuke')
-        .data(pointData)
-        .enter()
-        .append('circle')
-        .attr('r', 2)
-        .attr('cx', function(d,i) { if (d.x == 5 && d.y == 5) {return 600/2;} else {return randomCoord(d.x);}})
-        .attr('cy', function(d,i) { if (d.x == 5 && d.y == 5) {return 600/2;} else {return randomCoord(d.y);}})
-        .attr('class', 'nuke');
+            for (let i = 0; i < 7; i++) {
+                for (let j = 0; j < 7; j++) {
+                    let jitter = 3;
+                    if ((i < 6 && i > 0) && (j < 6 && j > 0)) {
+                        jitter = 5;
+                    }
+                    let xJitter = Math.floor(Math.random() * jitter) - jitter;
+                    let yJitter = Math.floor(Math.random() * jitter) - jitter;
+                    grid.push({
+                        x: (rowsCols * i) + 6 + xJitter + (x * boxSize),
+                        y: (rowsCols * j) + 6 + yJitter + (y * boxSize)
+                    })
+                }
+            }
+            return grid;
+        }
 
-    function randomCoord(val) {
-        var randomVal;
-        var min = (val * 600/11) + 2;
-        var max = ((val + 1) * 600/11) -2;
-        randomVal = Math.floor(Math.random()*(max-min)+min);
-        return randomVal;
-    }
-</script>
+        const svg = d3.select('.diagram')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', width);
+
+        const boxSize = width / 11;
+
+        svg.selectAll('.box')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('x', function(d) {
+                return d.x * boxSize;
+            })
+            .attr('y', function(d) {
+                return d.y * boxSize;
+            })
+            .attr('height', boxSize)
+            .attr('width', boxSize)
+            .attr('class', 'box');
+
+        let pointData = [];
+        let limitData = data;
+        limitData.splice(60, 1);
+        for (var i = 0; i < limitData.length; i++) {
+            let grid = innerGrid(limitData[i].x, limitData[i].y);
+            pointData = pointData.concat(grid);
+        }
+
+        pointData = pointData.concat([{
+            x: 5,
+            y: 5
+        }]);
+
+        svg.selectAll('.nuke')
+            .data(pointData)
+            .enter()
+            .append('circle')
+            .attr('r', 2)
+            .attr('cx', function(d, i) {
+                if (d.x == 5 && d.y == 5) {
+                    return width / 2;
+                } else {
+                    return d.x;
+                }
+            })
+            .attr('cy', (d, i) => {
+                if (d.x == 5 && d.y == 5) {
+                    return width / 2;
+                } else {
+                    return d.y;
+                }
+            })
+            .attr('class', 'nuke');
+    </script>
 </body>
+
 </html>
